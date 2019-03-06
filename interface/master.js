@@ -55,6 +55,11 @@ return response;
 });
 
 app.route.post('/user/dappid',async function(req,cb){
+    console.log("Email: " + req.query.email);
+    if(!req.query.email) return {
+        isSuccess: false,
+        message: "Please provide email"
+    }
         var result = await app.model.Mapping.findOne({
             condition: {
                 email:req.query.email
