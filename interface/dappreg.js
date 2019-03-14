@@ -45,26 +45,33 @@ app.route.post('/user/getDappsByAddress', async function(req, cb){
     return result;
 });
 
-app.route.post('/mapUser', async function(req, cb){
-    var options = {
-        email: req.query.email,
-        dappid: req.query.dappid,
-        role: req.query.role
-    }
-    
-    var check = await app.model.Mapping.exists({
-        email: req.query.email
+app.route.post('/mapUser', async function(req){
+    var mapping = await app.model.Mapping.findOne({
+        condition: {
+            email: req.query.email
+        }
     });
-    if(check) return {
-        message: "Email already Registered with Payroll",
+    if(!mapping){
+        app.sdb.create('mapping', {
+            email: req.query.email,
+            dappid: req.query.dappid,
+            role: req.query.role
+        });
+        return {
+            isSuccess: true
+        }
+    }
+    if(mapping.role === "new user"){
+        app.sdb.update('mapping', {dappid: req.query.dappid}, {email: req.query.email});
+        app.sdb.update('mapping', {role: req.query.role}, {email: req.query.email});
+        return {
+            isSuccess: true
+        }
+    }
+    return {
+        message: "Email already Registered in a Dapp",
         isSuccess: false
     }
-    
-    app.logger.log("About to create a mapping with options: " + JSON.stringify(options));
-    app.sdb.create('mapping', options);
-    return {
-        isSuccess: true
-    };
 })
 
 // app.route.post('/dappreg', async function (req, res) {
